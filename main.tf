@@ -1,4 +1,6 @@
 module "frontend" {
+  depends_on = [module.backend]
+
   source        = "./modules/App"
   instance_type = var.instance_type
   ssh_user      = var.ssh_user
