@@ -23,6 +23,7 @@ module "backend" {
 }
 
 module "mysql" {
+
   source        = "./modules/App"
   instance_type = var.instance_type
   component     = "mysql"
