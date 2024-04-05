@@ -7,18 +7,20 @@ resource "aws_vpc" "main" {
   }
 }
 
-resource "aws_subnet" "subnet" {
+resource "aws_subnet" "frontend_subnet" {
+  count = length(var.frontend_subnet)
   vpc_id = aws_vpc.main.id
-  cidr_block = var.subnet_cidr_block
+  cidr_block = var.frontend_subnet[count.index]
 
   tags = {
-    Name = "${var.env}-subnet"
+    Name = "${var.env}-frontend_subnet-${count.index+1}"
   }
+
 }
 
 resource "aws_vpc_peering_connection" "peering_connection" {
-  peer_vpc_id = var.default_vpc_Id
-  vpc_id      = aws_vpc.main.id
+  peer_vpc_id = var.default_vpc_Id   #Acceptor
+  vpc_id      = aws_vpc.main.id      #Requestor
   auto_accept = true
   tags = {
     Name = "${var.env}-vpc-to-default-vpc"
