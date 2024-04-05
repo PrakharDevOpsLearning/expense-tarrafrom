@@ -11,7 +11,7 @@ resource "aws_subnet" "frontend_subnet" {
   count = length(var.frontend_subnet)
   vpc_id = aws_vpc.main.id
   cidr_block = var.frontend_subnet[count.index]
-
+  availability_zone = var.availability_zone[count.index]
   tags = {
     Name = "${var.env}-frontend_subnet-${count.index+1}"
   }
