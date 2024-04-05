@@ -1,6 +1,6 @@
-data "aws_security_group" "selected" {
-  name = "allow-all"
-}
+#data "aws_security_group" "selected" {
+#  name = "allow-all"
+#}
 
 data "aws_ami" "image" {
   owners = ["973714476881"]
