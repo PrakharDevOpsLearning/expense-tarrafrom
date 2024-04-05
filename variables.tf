@@ -3,6 +3,9 @@ variable "instance_type" {}
 variable "ssh_user" {}
 variable "ssh_pass" {}
 variable "zone_id" {}
+variable "vpc" {}
 
-
-variable "cidr_block" {}
+variable "vpc_cidr_block" {}
+variable "subnet_cidr_block" {}
+variable "default_vpc_Id" {}
+variable "default_vpc_cidr" {}
