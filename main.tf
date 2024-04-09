@@ -1,43 +1,43 @@
-#module "frontend" {
-#  depends_on = [module.backend]
-#
-#  source        = "./modules/App"
-#  instance_type = var.instance_type
-#  zone_id       = var.zone_id
-#  component     = "frontend"
-#  env           = var.env
-#  vault_token   = var.vault_token
-#
-#  vpc_id        = module.vpc.vpc_id
-#  subnets       = module.vpc.frontend_subnets
-#}
-#
-#module "backend" {
-#  depends_on    = [module.mysql]
-#
-#  source        = "./modules/App"
-#  instance_type = var.instance_type
-#  component     = "backend"
-#  zone_id       = var.zone_id
-#  env           = var.env
-#  vault_token   = var.vault_token
-#
-#  vpc_id        = module.vpc.vpc_id
-#  subnets       = module.vpc.backend_subnets
-#}
-#
-#module "mysql" {
-#
-#  source        = "./modules/App"
-#  instance_type = var.instance_type
-#  component     = "mysql"
-#  zone_id       = var.zone_id
-#  env           = var.env
-#  vault_token   = var.vault_token
-#
-#  vpc_id        = module.vpc.vpc_id
-#  subnets       = module.vpc.db_subnets
-#}
+module "frontend" {
+  depends_on = [module.backend]
+
+  source        = "./modules/App"
+  instance_type = var.instance_type
+  zone_id       = var.zone_id
+  component     = "frontend"
+  env           = var.env
+  vault_token   = var.vault_token
+
+  vpc_id        = module.vpc.vpc_id
+  subnets       = module.vpc.frontend_subnets
+}
+
+module "backend" {
+  depends_on    = [module.mysql]
+
+  source        = "./modules/App"
+  instance_type = var.instance_type
+  component     = "backend"
+  zone_id       = var.zone_id
+  env           = var.env
+  vault_token   = var.vault_token
+
+  vpc_id        = module.vpc.vpc_id
+  subnets       = module.vpc.backend_subnets
+}
+
+module "mysql" {
+
+  source        = "./modules/App"
+  instance_type = var.instance_type
+  component     = "mysql"
+  zone_id       = var.zone_id
+  env           = var.env
+  vault_token   = var.vault_token
+
+  vpc_id        = module.vpc.vpc_id
+  subnets       = module.vpc.db_subnets
+}
 
 module "vpc" {
   source = "./modules/vpc"
