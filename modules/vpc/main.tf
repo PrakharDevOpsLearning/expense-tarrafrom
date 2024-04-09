@@ -82,3 +82,17 @@ resource "aws_subnet" "public_subnet" {
   }
 
 }
+
+resource "aws_internet_gateway" "igw" {
+  vpc_id = aws_vpc.main.id
+
+  tags = {
+    Name = "${var.env}-igw"
+  }
+}
+
+#resource "aws_route" "igw_route" {
+#  count = length(var.public_subnets)
+#  route_table_id = aws_internet_gateway.igw.id
+#  destination_cidr_block = var.public_subnets[count.index]
+#}
