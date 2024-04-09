@@ -4,6 +4,7 @@ variable "env" {}
 variable "frontend_subnet" {}
 variable "backend_subnet" {}
 variable "db_subnet" {}
+variable "public_subnets" {}
 variable "availability_zone" {}
 
 variable "default_vpc_Id" {}

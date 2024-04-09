@@ -1,15 +1,16 @@
 variable "env" {}
 variable "instance_type" {}
-variable "ssh_user" {}
-variable "ssh_pass" {}
+#variable "ssh_user" {}
+#variable "ssh_pass" {}
 variable "zone_id" {}
-
+variable "vault_token" {}
 
 #VPC Code Blocks
 
 variable "frontend_subnet" {}
 variable "backend_subnet" {}
 variable "db_subnet" {}
+variable "public_subnets" {}
 variable "availability_zone" {}
 
 variable "vpc_cidr_block" {}

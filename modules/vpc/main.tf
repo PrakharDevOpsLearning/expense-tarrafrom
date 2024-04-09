@@ -69,3 +69,16 @@ resource "aws_route" "default-vpc" {
   vpc_peering_connection_id = aws_vpc_peering_connection.peering_connection.id
   destination_cidr_block    = var.vpc_cidr_block
 }
+
+resource "aws_subnet" "public_subnet" {
+  count             = length(var.public_subnets)
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = var.public_subnets[count.index]
+  availability_zone = var.availability_zone[count.index]
+
+  tags = {
+    Name = "${var.env}-public_subnet-${count.index+1}"
+
+  }
+
+}
