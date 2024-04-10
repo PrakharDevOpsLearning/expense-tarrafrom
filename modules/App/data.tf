@@ -8,6 +8,6 @@ data "aws_ami" "image" {
   name_regex = "RHEL-9-DevOps-Practice"
 }
 
-#data "vault_generic_secret" "ssh" {
-#  path = "common/ssh"
-#}
+data "vault_generic_secret" "ssh" {
+  path = "common/ssh"
+}
