@@ -10,6 +10,12 @@ module "frontend" {
 
   vpc_id        = module.vpc.vpc_id
   subnets       = module.vpc.frontend_subnets
+
+  lb_subnets    = module.vpc.public_subnets
+  lb_type       = "public"
+  lb_needed     =  "true"
+  app_port      =  80
+
 }
 
 module "backend" {
@@ -24,6 +30,11 @@ module "backend" {
 
   vpc_id        = module.vpc.vpc_id
   subnets       = module.vpc.backend_subnets
+
+  lb_subnets    = module.vpc.backend_subnets
+  lb_type       = "private"
+  lb_needed     =  "true"
+  app_port      = 8080
 }
 
 module "mysql" {

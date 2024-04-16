@@ -7,3 +7,20 @@ variable "component" {}
 variable "subnets" {}
 variable "vpc_id" {}
 variable "vault_token" {}
+
+variable "app_port" {
+  default = null
+}
+
+
+variable "lb_type" {
+  default = null
+}
+
+variable "lb_subnets" {
+  default = null
+}
+
+variable "lb_needed" {
+  default = null
+}
