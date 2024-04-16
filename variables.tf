@@ -17,4 +17,6 @@ variable "vpc_cidr_block" {}
 variable "default_vpc_Id" {}
 variable "default_vpc_cidr" {}
 variable "default_vpc_route_table_id" {}
+variable "bastian_nodes" {}
+variable "prometheus_nodes" {}
 

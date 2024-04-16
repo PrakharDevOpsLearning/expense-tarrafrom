@@ -15,16 +15,34 @@ resource "aws_security_group" "main" {
   #INBOUND
 
   ingress {
-    from_port        = 0
-    to_port          = 0
-    protocol         = "-1"     #ALL TRAFFIC
-    cidr_blocks      = ["0.0.0.0/0"]
+    from_port        = var.app_port
+    to_port          = var.app_port
+    protocol         = "TCP"     #-1 for ALL TRAFFIC and this is for TCP only
+    cidr_blocks      = var.server_app_port_sg_cidr
+  }
+
+  # for Workstation access only
+  ingress {
+    from_port        = 22
+    to_port          = 22
+    protocol         = "TCP"    #-1 for ALL TRAFFIC and this is for TCP only
+    cidr_blocks      =  var.bastian_nodes
+  }
+
+  # for prometheus access only
+
+  ingress {
+    from_port        = 9100
+    to_port          = 9100
+    protocol         = "TCP"    #-1 for ALL TRAFFIC and this is for TCP only
+    cidr_blocks      =  var.prometheus_nodes
   }
 
   tags = {
     Name = "${var.component}-${var.env}-sg"
   }
 }
+
 
 resource "aws_instance" "instance" {
   ami                    = data.aws_ami.image.image_id
@@ -89,6 +107,37 @@ resource "aws_route53_record" "load-balancer" {
   ttl     = 30
 }
 
+# Load Balancer Security Group
+
+resource "aws_security_group" "load-balancer" {
+  count       = var.lb_needed ? 1 : 0
+  name        = "${var.component}-${var.env}-sg"
+  description = "${var.component}-${var.env}-sg"
+  vpc_id      = var.vpc_id
+
+  #OUTBOUND
+
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+  }
+
+  #INBOUND
+
+  ingress {
+    from_port        = var.app_port
+    to_port          = var.app_port
+    protocol         = "TCP"
+    cidr_blocks      = var.lb_app_port_sg_cidr
+  }
+
+  tags = {
+    Name = "${var.component}-${var.env}-sg"
+  }
+}
+
 #Load Balancer
 
 resource "aws_lb" "main" {
@@ -96,7 +145,7 @@ resource "aws_lb" "main" {
   name               = "${var.env}-${var.component}-alb"
   internal           = var.lb_type == "public" ? false : true
   load_balancer_type = "application"
-  security_groups    = [aws_security_group.main.id]
+  security_groups    = [aws_security_group.load-balancer[0].id]
   subnets            = var.lb_subnets
 
   tags = {
@@ -107,6 +156,7 @@ resource "aws_lb" "main" {
 #Target Group
 
 resource "aws_lb_target_group" "main" {
+
   count                 = var.lb_needed ? 1 : 0
   name                  = "${var.env}-${var.component}-tg"
   port                  = var.app_port
