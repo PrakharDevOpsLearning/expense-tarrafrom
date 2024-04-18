@@ -125,15 +125,18 @@ resource "aws_security_group" "load-balancer" {
   }
 
   #INBOUND
-
-  ingress {
-    from_port        = var.app_port
-    to_port          = var.app_port
-    protocol         = "TCP"
-    cidr_blocks      = var.lb_app_port_sg_cidr
+  # DYNAMIC BLOCK
+  dynamic "ingress" {
+    for_each = var.lb_ports
+    content {
+      from_port   = ingress.value
+      to_port     = ingress.value
+      protocol    = "TCP"
+      cidr_blocks = var.lb_app_port_sg_cidr
+    }
   }
 
-  tags = {
+    tags = {
     Name = "${var.component}-${var.env}-sg"
   }
 }
@@ -184,10 +187,42 @@ resource "aws_lb_target_group_attachment" "main" {
   port             = var.app_port
 }
 
-#Listener
+#Listener for frontend redirect HTTP -> HTTPS
+resource "aws_lb_listener" "frontend-http" {
+  count             = var.lb_needed && var.lb_type == "public" ? 1 : 0
+  load_balancer_arn = aws_lb.main[0].arn
+  port              = var.app_port
+  protocol          = "HTTP"
 
-resource "aws_lb_listener" "front_end" {
-  count             = var.lb_needed ? 1 : 0
+  default_action {
+    type = "redirect"
+
+    redirect {
+      port        = "443"
+      protocol    = "HTTPS"
+      status_code = "HTTP_301"
+    }
+  }
+}
+
+#Listener for frontend forward HTTPS -> HTTPS
+resource "aws_lb_listener" "frontend-https" {
+  count             = var.lb_needed && var.lb_type == "public" ? 1 : 0
+  load_balancer_arn = aws_lb.main[0].arn
+  port              = 443
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-TLS13-1-2-2021-06"
+  certificate_arn   = var.certificate_arn
+
+  default_action {
+  type             = "forward"
+  target_group_arn = aws_lb_target_group.main[0].arn
+  }
+
+}
+
+resource "aws_lb_listener" "backend" {
+  count             = var.lb_needed && var.lb_type != "public" ? 1 : 0
   load_balancer_arn = aws_lb.main[0].arn
   port              = var.app_port
   protocol          = "HTTP"
@@ -195,7 +230,6 @@ resource "aws_lb_listener" "front_end" {
   default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.main[0].arn
-
   }
 
 }

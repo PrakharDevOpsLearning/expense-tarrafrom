@@ -19,6 +19,8 @@ module "frontend" {
   prometheus_nodes        = var.prometheus_nodes
   server_app_port_sg_cidr = var.public_subnets
   lb_app_port_sg_cidr     = ["0.0.0.0/0"]
+  certificate_arn         = var.certificate_arn
+  lb_ports                = {http: 80, https: 443}
 
 }
 
@@ -43,7 +45,7 @@ module "backend" {
   prometheus_nodes        = var.prometheus_nodes
   server_app_port_sg_cidr = concat(var.frontend_subnet, var.backend_subnet)
   lb_app_port_sg_cidr     = var.frontend_subnet
-
+  lb_ports                = {http: 8080}
 }
 
 
@@ -62,7 +64,6 @@ module "mysql" {
   prometheus_nodes        = var.prometheus_nodes
   app_port                = 3306
   server_app_port_sg_cidr = var.backend_subnet
-
 }
 
 

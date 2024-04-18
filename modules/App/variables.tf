@@ -11,6 +11,9 @@ variable "vault_token" {}
 variable "bastian_nodes" {}
 variable "prometheus_nodes" {}
 variable "server_app_port_sg_cidr" {}
+variable "certificate_arn"{
+  default = null
+}
 
 variable "lb_app_port_sg_cidr" {
   default = []
@@ -31,4 +34,8 @@ variable "lb_subnets" {
 
 variable "lb_needed" {
   default = false
+}
+
+variable "lb_ports" {
+  default = {}
 }
