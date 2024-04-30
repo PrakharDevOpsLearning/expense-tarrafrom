@@ -1,18 +1,19 @@
 resource "aws_db_instance" "main" {
-  identifier           = "${var.component}-${var.env}"
-  db_name              = "mydb"
-  engine               = var.engine
-  engine_version       = var.engine_version
-  instance_class       = var.instance_class
-  username             = jsondecode(data.vault_generic_secret.rds.data_json).username
-  password             = jsondecode(data.vault_generic_secret.rds.data_json).password
-  parameter_group_name = aws_db_parameter_group.main.name
-  skip_final_snapshot  = var.skip_final_snapshot
-  multi_az             = false
-  allocated_storage    = var.allocated_storage
-  storage_type         = var.storage_type
-  publicly_accessible  = false
-  db_subnet_group_name = aws_db_subnet_group.default.name
+  identifier             = "${var.component}-${var.env}"
+  db_name                = "mydb"
+  engine                 = var.engine
+  engine_version         = var.engine_version
+  instance_class         = var.instance_class
+  username               = jsondecode(data.vault_generic_secret.rds.data_json).rds_username
+  password               = jsondecode(data.vault_generic_secret.rds.data_json).rds_password
+  parameter_group_name   = aws_db_parameter_group.main.name
+  skip_final_snapshot    = var.skip_final_snapshot
+  multi_az               = false
+  allocated_storage      = var.allocated_storage
+  storage_type           = var.storage_type
+  publicly_accessible    = false
+  db_subnet_group_name   = aws_db_subnet_group.default.name
+  vpc_security_group_ids = [aws_security_group.main.id]
 
 }
 
@@ -54,7 +55,7 @@ resource "aws_security_group" "main" {
   }
 
   tags = {
-    Name = "${var.component}-${var.env}rds"
+    Name = "${var.component}-${var.env}-sg"
   }
 }
 

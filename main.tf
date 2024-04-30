@@ -25,7 +25,7 @@ module "frontend" {
 }
 
 module "backend" {
-  depends_on              = [module.mysql]
+  depends_on              = [module.rds]
 
   source                  = "./modules/App"
   instance_type           = var.instance_type
@@ -49,22 +49,22 @@ module "backend" {
 }
 
 
-module "mysql" {
-
-  source                  = "./modules/App"
-  instance_type           = var.instance_type
-  component               = "mysql"
-  zone_id                 = var.zone_id
-  env                     = var.env
-  vault_token             = var.vault_token
-
-  vpc_id                  = module.vpc.vpc_id
-  subnets                 = module.vpc.db_subnets
-  bastian_nodes           = var.bastian_nodes
-  prometheus_nodes        = var.prometheus_nodes
-  app_port                = 3306
-  server_app_port_sg_cidr = var.backend_subnet
-}
+#module "mysql" {
+#
+#  source                  = "./modules/App"
+#  instance_type           = var.instance_type
+#  component               = "mysql"
+#  zone_id                 = var.zone_id
+#  env                     = var.env
+#  vault_token             = var.vault_token
+#
+#  vpc_id                  = module.vpc.vpc_id
+#  subnets                 = module.vpc.db_subnets
+#  bastian_nodes           = var.bastian_nodes
+#  prometheus_nodes        = var.prometheus_nodes
+#  app_port                = 3306
+#  server_app_port_sg_cidr = var.backend_subnet
+#}
 
 module "rds" {
 
