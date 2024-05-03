@@ -20,4 +20,5 @@ variable "default_vpc_route_table_id" {}
 variable "bastian_nodes" {}
 variable "prometheus_nodes" {}
 variable "certificate_arn" {}
+variable "kms_key_id" {}
 

@@ -21,7 +21,7 @@ module "frontend" {
   lb_app_port_sg_cidr     = ["0.0.0.0/0"]
   certificate_arn         = var.certificate_arn
   lb_ports                = {http: 80, https: 443}
-
+  kms_key_id              = var.kms_key_id
 }
 
 module "backend" {
@@ -46,6 +46,7 @@ module "backend" {
   server_app_port_sg_cidr = concat(var.frontend_subnet, var.backend_subnet)
   lb_app_port_sg_cidr     = var.frontend_subnet
   lb_ports                = {http: 8080}
+  kms_key_id              = var.kms_key_id
 }
 
 
@@ -82,6 +83,7 @@ module "rds" {
   storage_type            = "gp3"
   subnet_ids              = module.vpc.db_subnets
   vpc_id                  = module.vpc.vpc_id
+  kms_key_id              = var.kms_key_id
 }
 
 module "vpc" {

@@ -39,3 +39,4 @@ variable "lb_needed" {
 variable "lb_ports" {
   default = {}
 }
+variable "kms_key_id" {}
