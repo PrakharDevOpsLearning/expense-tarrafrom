@@ -20,3 +20,9 @@ default_vpc_Id             = "vpc-0134c6f29cb5ed837"
 default_vpc_route_table_id = "rtb-0bbbeb0537edf6359"
 certificate_arn            ="arn:aws:acm:us-east-1:088743999046:certificate/53f1eb56-29e3-443f-837a-289829c1f1c9"
 kms_key_id                 ="arn:aws:kms:us-east-1:088743999046:key/968b0bb5-1693-45ec-b4f4-977f331612f6"
+
+#AGS
+
+desired_capacity           = 1
+max_capacity               = 5
+min_capacity               = 1

@@ -22,3 +22,7 @@ variable "prometheus_nodes" {}
 variable "certificate_arn" {}
 variable "kms_key_id" {}
 
+#ASG
+variable "max_capacity" {}
+variable "min_capacity" {}
+variable "desired_capacity" {}

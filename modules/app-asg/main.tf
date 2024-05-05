@@ -3,7 +3,7 @@ resource "aws_security_group" "main" {
   description = "${var.component}-${var.env}-sg"
   vpc_id      = var.vpc_id
 
-  #OUTBOUND
+  # OUTBOUND
 
   egress {
     from_port        = 0
@@ -43,81 +43,54 @@ resource "aws_security_group" "main" {
   }
 }
 
-
-resource "aws_instance" "instance" {
-  ami                    = data.aws_ami.image.image_id
+resource "aws_launch_template" "main" {
+  name                   = "${var.component}-${var.env}"
+  image_id               = data.aws_ami.image.image_id
   instance_type          = var.instance_type
   vpc_security_group_ids = [aws_security_group.main.id]
-  subnet_id              = var.subnets[0]
 
-  root_block_device {
-    encrypted = true
-    kms_key_id = var.kms_key_id
-  }
-
-  tags = {
-    Name    = var.component
-    env     = var.env
-    monitor = "yes"
-  }
-
-  lifecycle {
-    ignore_changes = [ami,]
-  }
+  user_data = base64encode(templatefile("${path.module}/userdata.sh", {
+    component   = var.component
+    env         = var.env
+    vault_token = var.vault_token
+  }))
 }
 
-resource "null_resource" "ansible" {
-  triggers = {
-    instance = aws_instance.instance.id
+resource "aws_autoscaling_group" "main" {
+  name                   = "${var.component}-${var.env}"
+  desired_capacity       = var.min_capacity
+  max_size               = var.max_capacity
+  min_size               = var.min_capacity
+  vpc_zone_identifier    = var.subnets
+  target_group_arns      = [aws_lb_target_group.main.arn]
+
+
+  launch_template {
+    id      = aws_launch_template.main.id
+    version = "$Latest"
   }
 
-  connection {
-    type     = "ssh"
-    user     = jsondecode(data.vault_generic_secret.ssh.data_json).ansible_user
-    password = jsondecode(data.vault_generic_secret.ssh.data_json).ansible_password
-    host     = aws_instance.instance.private_ip
+  tag {
+    key                 = "Name"
+    propagate_at_launch = true
+    value               = "${var.component}-${var.env}"
   }
 
-  provisioner "remote-exec" {
 
-    inline = [
-      "rm -f ~/*.json",
-      "sudo pip3.11 install ansible hvac",
-      "ansible-pull -i localhost, -U https://github.com/PrakharDevOpsLearning/expense-ansible get-secrets.yml -e env=${var.env} -e role_name=${var.component} -e vault_token=${var.vault_token}",
-      "ansible-pull -i localhost, -U https://github.com/PrakharDevOpsLearning/expense-ansible expense.yml -e env=${var.env} -e role_name=${var.component} -e @~/secrets.json",
-    ]
-  }
-
-  provisioner "remote-exec" {
-
-    inline = [
-      "rm -f ~/*.json"
-    ]
-  }
-}
-
-resource "aws_route53_record" "server" {
-  count   = var.lb_needed ? 0 : 1              # if lb_needed is true then no server route 53 will be created "before the ? evaluates to true"
-  name    = "${var.component}-${var.env}"
-  type    = "A"
-  zone_id = var.zone_id
-  records = [aws_instance.instance.private_ip]
-  ttl     = 30
 }
 
 resource "aws_route53_record" "load-balancer" {
-  count   = var.lb_needed ? 1 : 0             # if lb_needed is true then load balance DNS will be pointed for servers.
+
   name    = "${var.component}-${var.env}"
   type    = "CNAME"
   zone_id = var.zone_id
-  records = [aws_lb.main[0].dns_name]
+  records = [aws_lb.main.dns_name]
   ttl     = 30
 }
 
 # Load Balancer Security Group
 
 resource "aws_security_group" "load-balancer" {
-  count       = var.lb_needed ? 1 : 0
   name        = "${var.component}-${var.env}-lb-sg"
   description = "${var.component}-${var.env}-lb-sg"
   vpc_id      = var.vpc_id
@@ -143,7 +116,7 @@ resource "aws_security_group" "load-balancer" {
     }
   }
 
-    tags = {
+  tags = {
     Name = "${var.component}-${var.env}-sg"
   }
 }
@@ -151,11 +124,10 @@ resource "aws_security_group" "load-balancer" {
 #Load Balancer
 
 resource "aws_lb" "main" {
-  count              = var.lb_needed ? 1 : 0
   name               = "${var.env}-${var.component}-alb"
   internal           = var.lb_type == "public" ? false : true
   load_balancer_type = "application"
-  security_groups    = [aws_security_group.load-balancer[0].id]
+  security_groups    = [aws_security_group.load-balancer.id]
   subnets            = var.lb_subnets
 
   tags = {
@@ -166,8 +138,6 @@ resource "aws_lb" "main" {
 #Target Group
 
 resource "aws_lb_target_group" "main" {
-
-  count                 = var.lb_needed ? 1 : 0
   name                  = "${var.env}-${var.component}-tg"
   port                  = var.app_port
   protocol              = "HTTP"
@@ -184,20 +154,19 @@ resource "aws_lb_target_group" "main" {
   }
 
 }
-
-#List of targets to be attached to the above group
-
-resource "aws_lb_target_group_attachment" "main" {
-  count            = var.lb_needed ? 1 : 0
-  target_group_arn = aws_lb_target_group.main[0].arn
-  target_id        = aws_instance.instance.id
-  port             = var.app_port
-}
+#
+##List of targets to be attached to the above group
+#
+#resource "aws_lb_target_group_attachment" "main" {
+#  target_group_arn = aws_lb_target_group.main.arn
+#  target_id        = aws_instance.instance.id
+#  port             = var.app_port
+#}
 
 #Listener for frontend redirect HTTP -> HTTPS
 resource "aws_lb_listener" "frontend-http" {
-  count             = var.lb_needed && var.lb_type == "public" ? 1 : 0
-  load_balancer_arn = aws_lb.main[0].arn
+  count             = var.lb_type == "public" ? 1 : 0
+  load_balancer_arn = aws_lb.main.arn
   port              = var.app_port
   protocol          = "HTTP"
 
@@ -214,29 +183,43 @@ resource "aws_lb_listener" "frontend-http" {
 
 #Listener for frontend forward HTTPS -> HTTPS
 resource "aws_lb_listener" "frontend-https" {
-  count             = var.lb_needed && var.lb_type == "public" ? 1 : 0
-  load_balancer_arn = aws_lb.main[0].arn
+  count             = var.lb_type == "public" ? 1 : 0
+  load_balancer_arn = aws_lb.main.arn
   port              = 443
   protocol          = "HTTPS"
   ssl_policy        = "ELBSecurityPolicy-TLS13-1-2-2021-06"
   certificate_arn   = var.certificate_arn
 
   default_action {
-  type             = "forward"
-  target_group_arn = aws_lb_target_group.main[0].arn
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.main.arn
   }
 
 }
 
 resource "aws_lb_listener" "backend" {
-  count             = var.lb_needed && var.lb_type != "public" ? 1 : 0
-  load_balancer_arn = aws_lb.main[0].arn
+  count             = var.lb_type != "public" ? 1 : 0
+  load_balancer_arn = aws_lb.main.arn
   port              = var.app_port
   protocol          = "HTTP"
 
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.main[0].arn
+    target_group_arn = aws_lb_target_group.main.arn
+  }
+
+}
+
+resource "aws_autoscaling_policy" "main" {
+  autoscaling_group_name = aws_autoscaling_group.main.name
+  name                   = "target-cpu"
+  policy_type            = "TargetTrackingScaling"
+  target_tracking_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ASGAverageCPUUtilization"
+    }
+
+    target_value = 50.0
   }
 
 }
