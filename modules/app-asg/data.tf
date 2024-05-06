@@ -1,7 +1,7 @@
 data "aws_ami" "image" {
-  owners = ["973714476881"]
+  owners      = ["self"]
   most_recent = true
-  name_regex = "RHEL-9-DevOps-Practice"
+  name_regex  = "golden-ami-*"
 }
 
 data "vault_generic_secret" "ssh" {
